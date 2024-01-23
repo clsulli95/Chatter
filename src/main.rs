@@ -5,8 +5,9 @@ use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc;
 use std::thread;
 use std::time::SystemTime;
+use serde_derive::{Serialize, Deserialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct MessageHeader {
     timestamp: SystemTime, 
 }
@@ -19,12 +20,12 @@ impl Default for MessageHeader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct EchoData {
     to_echo: String,
 }
 
-#[derive(Debug, Serializable)]
+#[derive(Debug, Serialize, Deserialize)]
 enum Message {
     Start(MessageHeader),
     Echo(MessageHeader, EchoData),
@@ -75,14 +76,12 @@ fn handle_client(send_handle: mpsc::Sender<Message>, mut stream: UnixStream) -> 
     let mut buf = String::new();
     stream.read_to_string(&mut buf)?;
 
-    let msg = match buf.as_str() {
-        "Start" => Message::Start(MessageHeader::default()),
-        "Echo" => Message::Echo(MessageHeader::default(), EchoData { to_echo: "Fuck!".to_string() }),
-        _ => return Err(anyhow::anyhow!("Fuck!")),
-    };
-
-    send_handle.send(msg)?;
-    Ok(())
+    if let Ok(msg) = serde_json::from_str(buf.as_str()) {
+        send_handle.send(msg)?;
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("Fuck!"))
+    }
 }
 
 fn main() -> Result<(), anyhow::Error> {
