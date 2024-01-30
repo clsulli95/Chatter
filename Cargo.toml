@@ -1,12 +1,9 @@
-[package]
-name = "chatter"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-chatter-client = { path="./chatter-client" }
-chatter-server = { path="./chatter-server" }
-chatter-types = { path="./chatter-types" }
-
+[workspace]
+members = [
+    "chatter-client",
+    "chatter-server",
+    "chatter-types",
+    "transport",
+    "example_chatter_service",
+    "example_service_that_communicates_with_chatter",
+]
